@@ -1,6 +1,6 @@
 /**
  * @file ws2812b.h
- * @brief Driver interface for a chain of 64 WS2812B RGB LEDs.
+ * @brief Driver interface for a chain of 256 WS2812B RGB LEDs.
  */
 
 #ifndef WS2812B_H
@@ -8,8 +8,8 @@
 
 #include <stdint.h>
 
-/** @brief Number of LEDs in the connected 8x8 matrix. */
-#define WS2812B_LED_COUNT 64U
+/** @brief Number of LEDs in the connected 16x16 matrix. */
+#define WS2812B_LED_COUNT 256U
 
 /**
  * @brief One LED colour in the WS2812B's native wire order.
@@ -32,11 +32,11 @@ void ws2812b_init(void);
 /**
  * @brief Refresh the physical LED chain from a GRB-ordered pixel array.
  * @param pixels Pixel array in physical DIN-to-DOUT chain order, or NULL for black.
- * @param count Number of supplied pixels; values above 64 are clamped.
+ * @param count Number of supplied pixels; values above 256 are clamped.
  *
  * Any unsupplied LEDs are transmitted as black. The function masks interrupts
- * only for the 1.92 ms timing-sensitive data waveform.
+ * only for the approximately 7.5 ms timing-sensitive data waveform.
  */
-void ws2812b_write(const ws2812b_rgb_t *pixels, uint8_t count);
+void ws2812b_write(const ws2812b_rgb_t *pixels, uint16_t count);
 
 #endif

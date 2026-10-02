@@ -1,6 +1,6 @@
 /**
  * @file ws2812b.c
- * @brief Frame transmission and latch timing for the 64-pixel WS2812B matrix.
+ * @brief Frame transmission and latch timing for the 256-pixel WS2812B matrix.
  */
 
 #include "ws2812b.h"
@@ -21,7 +21,7 @@ void ws2812b_init(void)
     _delay_us(80);
 }
 
-void ws2812b_write(const ws2812b_rgb_t *pixels, uint8_t count)
+void ws2812b_write(const ws2812b_rgb_t *pixels, uint16_t count)
 {
     uint8_t saved_sreg;
     uint8_t zero = 0U;
@@ -41,7 +41,7 @@ void ws2812b_write(const ws2812b_rgb_t *pixels, uint8_t count)
         spi_write((const uint8_t *)pixels, (uint16_t)count * sizeof(ws2812b_rgb_t));
     }
 
-    /** Pad a partial update with black so all 64 physical LEDs are refreshed. */
+    /** Pad a partial update with black so all 256 physical LEDs are refreshed. */
     while (count < WS2812B_LED_COUNT) {
         spi_write(&zero, 1U);
         ++count;

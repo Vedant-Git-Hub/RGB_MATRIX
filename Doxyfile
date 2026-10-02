@@ -1,6 +1,6 @@
 # Doxygen configuration for RGB Matrix Animator.
 PROJECT_NAME           = "RGB Matrix Animator"
-PROJECT_BRIEF          = "Bare-metal AVR animations for an 8x8 WS2812B matrix"
+PROJECT_BRIEF          = "Bare-metal AVR animations for a 16x16 WS2812B matrix"
 PROJECT_NUMBER         = 1.0
 OUTPUT_DIRECTORY       = docs
 CREATE_SUBDIRS         = NO

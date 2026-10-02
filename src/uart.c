@@ -16,15 +16,19 @@
 #define UART_BAUD_RATE 115200UL
 #define UART_UBRR_VALUE ((F_CPU / (8UL * UART_BAUD_RATE)) - 1UL)
 #define UART_RX_BUFFER_SIZE 16U
-#define UART_TX_BUFFER_SIZE 128U
+#define UART_TX_BUFFER_SIZE 64U  /**< Queue capacity; menu output is flow-controlled. */
 
 /** @brief Single-producer/single-consumer receive queue shared with the RX ISR. */
 static volatile uint8_t rx_buffer[UART_RX_BUFFER_SIZE];
+/** @brief Receive queue insertion index owned by the RX ISR. */
 static volatile uint8_t rx_head;
+/** @brief Receive queue removal index owned by the foreground loop. */
 static volatile uint8_t rx_tail;
 /** @brief Single-producer/single-consumer transmit queue drained by the UDRE ISR. */
 static volatile uint8_t tx_buffer[UART_TX_BUFFER_SIZE];
+/** @brief Transmit queue insertion index owned by the foreground loop. */
 static volatile uint8_t tx_head;
+/** @brief Transmit queue removal index owned by the UDRE ISR. */
 static volatile uint8_t tx_tail;
 
 _Static_assert((UART_RX_BUFFER_SIZE & (UART_RX_BUFFER_SIZE - 1U)) == 0U,
