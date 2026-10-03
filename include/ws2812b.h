@@ -30,7 +30,16 @@ _Static_assert(sizeof(ws2812b_rgb_t) == 3U, "WS2812B pixels must be tightly pack
 void ws2812b_init(void);
 
 /**
- * @brief Refresh the physical LED chain from a GRB-ordered pixel array.
+ * @brief Set and persist the global brightness level.
+ * @param brightness Brightness level from 0 (off) to 15 (full).
+ */
+void ws2812b_set_brightness(uint8_t brightness);
+
+/** @brief Return the current persisted global brightness level. */
+uint8_t ws2812b_get_brightness(void);
+
+/**
+ * @brief Refresh the physical LED chain using the configured brightness.
  * @param pixels Pixel array in physical DIN-to-DOUT chain order, or NULL for black.
  * @param count Number of supplied pixels; values above 256 are clamped.
  *
@@ -38,5 +47,6 @@ void ws2812b_init(void);
  * only for the approximately 7.5 ms timing-sensitive data waveform.
  */
 void ws2812b_write(const ws2812b_rgb_t *pixels, uint16_t count);
+
 
 #endif

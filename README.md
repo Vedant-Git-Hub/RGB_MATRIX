@@ -136,6 +136,11 @@ send `m` at any time to print the menu again.
 | `0` | 3D colour tunnel |
 | `s` | Autonomous snake game |
 | `t` | 16×16 row-wise panel orientation test |
+| `b` | Set global brightness from 0 (off) to 15 (full) |
+
+To change brightness, send `b`, enter a value from `0` to `15`, and press
+Enter. The selected level remains active when changing animations and is saved
+in the Nano's internal EEPROM, so it is restored after a power cycle.
 
 The snake plays without user input. Food is allocated randomly on unoccupied
 cells, the snake grows after each meal, and after eating 10 pieces it flashes
@@ -153,6 +158,11 @@ The application checks UART commands once each 150 ms animation frame. UART
 receive/transmit run through USART interrupts. The WS2812B data output masks
 interrupts for approximately 7.5 ms per frame, because an interrupt during
 the waveform could be interpreted as the WS2812B reset interval.
+
+Brightness scaling is implemented by the WS2812B driver during transmission,
+so changing brightness does not modify or accumulate against the animation
+framebuffer. The driver stores the selected level in internal EEPROM and
+restores it during initialization.
 
 ## Matrix orientation
 

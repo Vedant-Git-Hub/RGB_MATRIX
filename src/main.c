@@ -27,7 +27,8 @@
 /** @brief Top-level application states. */
 typedef enum {
     APP_SHOW_MENU,
-    APP_RUNNING_ANIMATION
+    APP_RUNNING_ANIMATION,
+    APP_BRIGHTNESS_INPUT
 } app_state_t;
 
 /** @brief UART-selectable animation identifiers. */
@@ -125,6 +126,10 @@ static uint8_t snake_game_over;
 static uint8_t snake_game_over_frame;
 /** @brief Next logical cell used by the continuous panel test. */
 static uint16_t panel_test_position;
+/** @brief Numeric value accumulated while the brightness prompt is active. */
+static uint8_t brightness_input_value;
+/** @brief Number of digits received for the pending brightness value. */
+static uint8_t brightness_input_digits;
 
 /** @brief Forward declaration because animation initialisation precedes snake code. */
 static void initialise_snake(void);
@@ -808,7 +813,41 @@ static void print_menu(void)
     uart_write_flash(PSTR("4 - Twinkling starfield\r\n5 - Colour wipe\r\n6 - Theater chase\r\n"));
     uart_write_flash(PSTR("7 - Rainbow scanner\r\n8 - Plasma\r\n9 - Rotating colour 3D cube\r\n"));
     uart_write_flash(PSTR("0 - 3D colour tunnel\r\ns - Autonomous snake\r\n"));
-    uart_write_flash(PSTR("t - 16x16 row-wise panel test\r\nm - Show this menu\r\nSend a number (0-9/s/t): "));
+    uart_write_flash(PSTR("t - 16x16 row-wise panel test\r\nb - Set brightness (0-15)\r\nm - Show this menu\r\nSend a number (0-9/s/t/b): "));
+}
+
+/** @brief Start the UART brightness-value input prompt. */
+static void begin_brightness_input(void)
+{
+    brightness_input_value = 0U;
+    brightness_input_digits = 0U;
+    uart_write_flash(PSTR("\r\nBrightness 0-15, then Enter: "));
+}
+
+/**
+ * @brief Consume one character from the brightness-value prompt.
+ * @param input Received UART character.
+ * @return true when the prompt has completed and the application can resume.
+ */
+static bool handle_brightness_input(uint8_t input)
+{
+    if ((input == '\r') || (input == '\n')) {
+        if ((brightness_input_digits != 0U) && (brightness_input_value <= 15U)) {
+            ws2812b_set_brightness(brightness_input_value);
+            uart_write_flash(PSTR("\r\nBrightness updated.\r\n"));
+            return true;
+        }
+        uart_write_flash(PSTR("\r\nInvalid brightness; enter 0-15: "));
+        brightness_input_value = 0U;
+        brightness_input_digits = 0U;
+        return false;
+    }
+
+    if ((input >= '0') && (input <= '9') && (brightness_input_digits < 2U)) {
+        brightness_input_value = (uint8_t)(brightness_input_value * 10U + input - '0');
+        ++brightness_input_digits;
+    }
+    return false;
 }
 
 /**
@@ -853,7 +892,14 @@ int main(void)
         uint8_t input;
 
         while (uart_read_byte(&input)) {
-            if ((input == 'm') || (input == 'M')) {
+            if (state == APP_BRIGHTNESS_INPUT) {
+                if (handle_brightness_input(input)) {
+                    state = APP_RUNNING_ANIMATION;
+                }
+            } else if ((input == 'b') || (input == 'B')) {
+                begin_brightness_input();
+                state = APP_BRIGHTNESS_INPUT;
+            } else if ((input == 'm') || (input == 'M')) {
                 state = APP_SHOW_MENU;
             } else if (select_animation(input, &selected_animation)) {
                 initialise_animation(selected_animation);
