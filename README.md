@@ -5,7 +5,7 @@ Bare-metal AVR firmware for an Arduino Nano (ATmega328P, 16 MHz) driving a
 core or Arduino libraries.
 
 The project provides a cycle-accurate one-wire WS2812B output on **D13**, an
-interrupt-buffered UART menu at 115200 baud, and ten selectable LED effects.
+interrupt-buffered UART menu at 115200 baud, and multiple selectable LED effects.
 
 ## Features
 
@@ -14,7 +14,7 @@ interrupt-buffered UART menu at 115200 baud, and ten selectable LED effects.
 - Provides a UART menu on the Nano USB serial connection, including an
   autonomous snake game.
 - Keeps menu text, palettes, and animation geometry in program flash.
-- Uses about 952 B SRAM and 4 KB flash in the current build.
+- Uses about 954 B SRAM and 5 KB flash in the current build.
 - Includes Doxygen comments and a `Doxyfile` for generated API documentation.
 
 ## Hardware connections
@@ -134,6 +134,7 @@ send `m` at any time to print the menu again.
 | `8` | Plasma |
 | `9` | Rotating colour 3D wireframe cube |
 | `0` | 3D colour tunnel |
+| `w` | Slowly traveling multicolor sine wave |
 | `s` | Autonomous snake game |
 | `t` | 16×16 row-wise panel orientation test |
 | `b` | Set global brightness from 0 (off) to 15 (full) |
@@ -146,6 +147,10 @@ The snake plays without user input. Food is allocated randomly on unoccupied
 cells, the snake grows after each meal, and after eating 10 pieces it flashes
 a red/orange border-and-cross game-over animation before automatically starting
 a new round.
+
+The `w` effect draws a three-pixel-wide sine wave across the logical 16×16
+canvas. Its phase advances once per 150 ms frame, so the wave travels slowly
+from left to right while its color cycles through the hue wheel.
 
 The `t` test treats the assembly as one continuous 16×16 canvas. It clears the
 matrix and lights one white logical pixel every 100 ms in row-major order:

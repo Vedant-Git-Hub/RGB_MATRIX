@@ -43,6 +43,7 @@ typedef enum {
     ANIMATION_PLASMA,
     ANIMATION_3D_CUBE,
     ANIMATION_3D_TUNNEL,
+    ANIMATION_SINE_WAVE,
     ANIMATION_SNAKE,
     ANIMATION_PANEL_TEST
 } animation_t;
@@ -112,6 +113,8 @@ static uint8_t plasma_phase;
 static uint8_t tunnel_phase;
 /** @brief Current 16-step angle used by the rotating cube. */
 static uint8_t cube_angle;
+/** @brief Horizontal phase of the continuously traveling sine wave. */
+static uint8_t sine_wave_phase;
 /** @brief Snake body cells, with the head at index zero. */
 static uint8_t snake_body[SNAKE_MAX_LENGTH];
 /** @brief Number of occupied cells in the snake body. */
@@ -304,6 +307,9 @@ static void initialise_animation(animation_t animation)
         break;
     case ANIMATION_3D_TUNNEL:
         tunnel_phase = 0U;
+        break;
+    case ANIMATION_SINE_WAVE:
+        sine_wave_phase = 0U;
         break;
     case ANIMATION_SNAKE:
         initialise_snake();
@@ -575,6 +581,30 @@ static void step_3d_tunnel(void)
     }
 }
 
+/** @brief Render one slowly traveling, color-shifting sine wave frame. */
+static void step_sine_wave(void)
+{
+    uint8_t column;
+
+    clear_matrix();
+    for (column = 0U; column < MATRIX_WIDTH; ++column) {
+        const uint8_t angle = (uint8_t)((sine_wave_phase + column) & 0x0FU);
+        const int8_t sine = (int8_t)pgm_read_byte(&cube_sine[angle]);
+        const uint8_t row = (uint8_t)(8 + ((int16_t)sine * 5 / 64));
+        const ws2812b_rgb_t colour = scale_colour(
+            hue_to_colour((uint8_t)(sine_wave_phase * 16U + column * 10U)), 220U);
+
+        matrix_set_pixel(row, column, colour);
+        if (row > 0U) {
+            matrix_set_pixel((uint8_t)(row - 1U), column, scale_colour(colour, 110U));
+        }
+        if (row < (MATRIX_HEIGHT - 1U)) {
+            matrix_set_pixel((uint8_t)(row + 1U), column, scale_colour(colour, 110U));
+        }
+    }
+    sine_wave_phase = (uint8_t)((sine_wave_phase + 1U) & 0x0FU);
+}
+
 /** @brief Return whether a cell is currently occupied by the snake body. */
 static bool snake_contains(uint8_t cell)
 {
@@ -799,6 +829,7 @@ static void step_animation(animation_t animation)
     case ANIMATION_PLASMA:        step_plasma(); break;
     case ANIMATION_3D_CUBE:       step_3d_cube(); break;
     case ANIMATION_3D_TUNNEL:     step_3d_tunnel(); break;
+    case ANIMATION_SINE_WAVE:     step_sine_wave(); break;
     case ANIMATION_SNAKE:         step_snake(); break;
     case ANIMATION_PANEL_TEST:    step_panel_test(); break;
     }
@@ -812,8 +843,8 @@ static void print_menu(void)
     uart_write_flash(PSTR("1 - Digital rain\r\n2 - Rainbow wave\r\n3 - Multicolour comet\r\n"));
     uart_write_flash(PSTR("4 - Twinkling starfield\r\n5 - Colour wipe\r\n6 - Theater chase\r\n"));
     uart_write_flash(PSTR("7 - Rainbow scanner\r\n8 - Plasma\r\n9 - Rotating colour 3D cube\r\n"));
-    uart_write_flash(PSTR("0 - 3D colour tunnel\r\ns - Autonomous snake\r\n"));
-    uart_write_flash(PSTR("t - 16x16 row-wise panel test\r\nb - Set brightness (0-15)\r\nm - Show this menu\r\nSend a number (0-9/s/t/b): "));
+    uart_write_flash(PSTR("0 - 3D colour tunnel\r\nw - Traveling sine wave\r\ns - Autonomous snake\r\n"));
+    uart_write_flash(PSTR("t - 16x16 row-wise panel test\r\nb - Set brightness (0-15)\r\nm - Show this menu\r\nSend a number (0-9/w/s/t/b): "));
 }
 
 /** @brief Start the UART brightness-value input prompt. */
@@ -867,6 +898,8 @@ static bool select_animation(uint8_t input, animation_t *animation)
     case '8': *animation = ANIMATION_PLASMA; return true;
     case '9': *animation = ANIMATION_3D_CUBE; return true;
     case '0': *animation = ANIMATION_3D_TUNNEL; return true;
+    case 'w':
+    case 'W': *animation = ANIMATION_SINE_WAVE; return true;
     case 's':
     case 'S': *animation = ANIMATION_SNAKE; return true;
     case 't':
